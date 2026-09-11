@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Credentials</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+        <div class="bg-orb bg-orb-3"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Secure Credentials</h1>
+            <div class="expiry-badges">
+                <span class="badge badge-time">Expires {{ secret.expires_at.strftime('%Y-%m-%d %H:%M UTC') }}</span>
+                <span class="badge badge-views">View {{ secret.view_count }} of {{ secret.max_views }}</span>
+            </div>
+        </div>
+
+        <div class="cred-card">
+            <div class="cred-section">
+                <h3>Root Account</h3>
+                <div class="cred-row">
+                    <span class="label">Username</span>
+                    <span class="value mono" id="root_user">{{ secret.root_user }}</span>
+                    <button class="btn-copy" onclick="copyField('root_user')">Copy</button>
+                </div>
+                <div class="cred-row">
+                    <span class="label">Password</span>
+                    <span class="value mono" id="root_pass">&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;</span>
+                    <button class="btn-copy" id="btn_root_pass" onclick="showAndCopy('root_pass', '{{ secret.root_pass }}')">Show &amp; Copy</button>
+                </div>
+            </div>
+
+            <div class="cred-section">
+                <h3>User Account</h3>
+                <div class="cred-row">
+                    <span class="label">Username</span>
+                    <span class="value mono" id="user_user">{{ secret.user_user }}</span>
+                    <button class="btn-copy" onclick="copyField('user_user')">Copy</button>
+                </div>
+                <div class="cred-row">
+                    <span class="label">Password</span>
+                    <span class="value mono" id="user_pass">&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;</span>
+                    <button class="btn-copy" id="btn_user_pass" onclick="showAndCopy('user_pass', '{{ secret.user_pass }}')">Show &amp; Copy</button>
+                </div>
+            </div>
+
+            {% if secret.note %}
+            <div class="cred-section">
+                <h3>Note</h3>
+                <div class="note-box">{{ secret.note }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <footer class="footer-main">
+            <p>This link will expire automatically. Do not share it further.</p>
+        </footer>
+    </div>
+
+    <script>
+    var DOTS = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
+    var autoHideTimers = {};
+
+    function copyField(id) {
+        var el = document.getElementById(id);
+        var text = el.textContent;
+        el.classList.add('flash-green');
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).catch(function() {
+                fallbackCopy(text);
+            });
+        } else {
+            fallbackCopy(text);
+        }
+
+        setTimeout(function() {
+            el.classList.remove('flash-green');
+        }, 600);
+    }
+
+    function showAndCopy(id, value) {
+        var el = document.getElementById(id);
+        el.textContent = value;
+        el.classList.add('flash-green');
+
+        if (autoHideTimers[id]) clearTimeout(autoHideTimers[id]);
+        autoHideTimers[id] = setTimeout(function() {
+            el.textContent = DOTS;
+            el.classList.remove('flash-green');
+        }, 3000);
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(value).catch(function() {
+                fallbackCopy(value);
+            });
+        } else {
+            fallbackCopy(value);
+        }
+    }
+
+    function fallbackCopy(text) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+    }
+    </script>
+</body>
+</html>
