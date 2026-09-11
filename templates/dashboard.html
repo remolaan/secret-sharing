@@ -4,12 +4,6 @@
 <div class="dash-wrap">
   <div class="dash-header">
     <h1>Secure Credential Share</h1>
-    <div class="dash-actions">
-      <form method="post" action="{{ url_for('cleanup_now') }}" class="inline-form">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="btn btn-ghost btn-sm">Purge expired</button>
-      </form>
-    </div>
   </div>
 
   <div class="tabs-bar">

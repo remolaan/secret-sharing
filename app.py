@@ -384,15 +384,6 @@ def revoke_secret(token):
     return redirect(url_for("dashboard"))
 
 
-@app.route("/secrets/cleanup", methods=["POST"])
-@login_required
-def cleanup_now():
-    validate_csrf()
-    purge_expired()
-    flash("Expired links purged.", "success")
-    return redirect(url_for("dashboard"))
-
-
 # ---------------------------------------------------------------------------
 # Client-facing reveal flow (no login -- gated by the token + explicit
 # consent instead). GET never consumes a view, so link-scanners/email
