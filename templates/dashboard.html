@@ -39,7 +39,7 @@
             <label for="root_pass">Root Password</label>
             <div class="input-with-btn">
               <input type="text" id="root_pass" name="root_pass" placeholder="password" required autocomplete="off">
-              <button type="button" class="btn-gen" onclick="openGenerator('root_pass')" title="Generate password">&#x1f510;</button>
+              <button type="button" class="btn-gen" data-open-gen="root_pass" title="Generate password">&#x1f510;</button>
             </div>
           </div>
         </div>
@@ -53,7 +53,7 @@
             <label for="user_pass">User Password <span class="muted">(optional)</span></label>
             <div class="input-with-btn">
               <input type="text" id="user_pass" name="user_pass" placeholder="password" autocomplete="off">
-              <button type="button" class="btn-gen" onclick="openGenerator('user_pass')" title="Generate password">&#x1f510;</button>
+              <button type="button" class="btn-gen" data-open-gen="user_pass" title="Generate password">&#x1f510;</button>
             </div>
           </div>
         </div>
@@ -116,9 +116,8 @@
             </div>
           </div>
           <div class="secret-buttons">
-            <input class="link-field" type="text" readonly value="{{ s.share_url }}" onclick="this.select()">
-            <form method="post" action="{{ url_for('revoke_secret', token=s.token) }}" class="inline-form"
-                  onsubmit="return confirm('Permanently delete this link and its credentials? This cannot be undone.');">
+            <input class="link-field" type="text" readonly value="{{ s.share_url }}">
+            <form method="post" action="{{ url_for('revoke_secret', token=s.token) }}" class="inline-form" data-confirm="Permanently delete this link and its credentials? This cannot be undone.">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" class="btn btn-danger btn-sm">Revoke</button>
             </form>
@@ -132,8 +131,8 @@
 </div>
 
 <!-- Password Generator Modal -->
-<div class="modal-overlay" id="genModal" onclick="closeGenerator(event)">
-  <div class="modal" onclick="event.stopPropagation()">
+<div class="modal-overlay" id="genModal">
+  <div class="modal">
     <h2>Generate Password</h2>
 
     <div class="gen-preview">
@@ -142,7 +141,7 @@
 
     <div class="form-group">
       <label for="genLength">Length: <span id="genLenVal">16</span></label>
-      <input type="range" id="genLength" min="4" max="16" value="16" oninput="updateGenLen()">
+      <input type="range" id="genLength" min="4" max="16" value="16">
     </div>
 
     <div class="gen-options">
@@ -161,70 +160,14 @@
     </div>
 
     <div class="modal-actions">
-      <button type="button" class="btn btn-ghost" onclick="regenerate()">Generate</button>
-      <button type="button" class="btn btn-primary" onclick="useGenerated()">Use This</button>
+      <button type="button" class="btn btn-ghost" data-regen>Generate</button>
+      <button type="button" class="btn btn-primary" data-use-gen>Use This</button>
     </div>
 
-    <button type="button" class="modal-close" onclick="closeGenerator()">&times;</button>
+    <button type="button" class="modal-close" data-close-gen>&times;</button>
   </div>
 </div>
 
+<script src="{{ url_for('static', filename='js/generator.js') }}"></script>
 <script src="{{ url_for('static', filename='js/reveal.js') }}"></script>
-<script>
-var GEN_TARGET = '';
-
-function generatePassword() {
-  var len = parseInt(document.getElementById('genLength').value);
-  var useUpper = document.getElementById('genUpper').checked;
-  var useLower = document.getElementById('genLower').checked;
-  var useNums = document.getElementById('genNumbers').checked;
-  var useSyms = document.getElementById('genSymbols').checked;
-
-  var chars = '';
-  if (useUpper) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  if (useLower) chars += 'abcdefghijklmnopqrstuvwxyz';
-  if (useNums) chars += '0123456789';
-  if (useSyms) chars += '!@#$%^&*()_+-=';
-
-  if (!chars) chars = 'abcdefghijklmnopqrstuvwxyz';
-
-  var arr = new Uint32Array(len);
-  crypto.getRandomValues(arr);
-  var result = '';
-  for (var i = 0; i < len; i++) {
-    result += chars[arr[i] % chars.length];
-  }
-  return result;
-}
-
-function updateGenLen() {
-  document.getElementById('genLenVal').textContent = document.getElementById('genLength').value;
-  document.getElementById('genPreview').value = generatePassword();
-}
-
-function regenerate() {
-  document.getElementById('genPreview').value = generatePassword();
-}
-
-function openGenerator(targetId) {
-  GEN_TARGET = targetId;
-  document.getElementById('genPreview').value = generatePassword();
-  document.getElementById('genModal').classList.add('active');
-  document.getElementById('genPreview').focus();
-}
-
-function closeGenerator(e) {
-  if (!e || e.target === document.getElementById('genModal')) {
-    document.getElementById('genModal').classList.remove('active');
-  }
-}
-
-function useGenerated() {
-  var pw = document.getElementById('genPreview').value;
-  if (pw) {
-    document.getElementById(GEN_TARGET).value = pw;
-  }
-  document.getElementById('genModal').classList.remove('active');
-}
-</script>
 {% endblock %}
