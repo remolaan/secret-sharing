@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · Secret Share{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <h1>Dashboard</h1>
+  <form method="post" action="{{ url_for('cleanup_now') }}" class="inline-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-ghost btn-sm">Purge expired now</button>
+  </form>
+</div>
+
+<div class="grid">
+  <section class="card">
+    <h2>New credential link</h2>
+    <form method="post" action="{{ url_for('create_secret') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="field-row">
+        <div>
+          <label for="root_user">Root username</label>
+          <input type="text" id="root_user" name="root_user" required>
+        </div>
+        <div>
+          <label for="root_pass">Root password</label>
+          <input type="text" id="root_pass" name="root_pass" required autocomplete="off">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div>
+          <label for="user_user">User username <span class="muted">(optional)</span></label>
+          <input type="text" id="user_user" name="user_user">
+        </div>
+        <div>
+          <label for="user_pass">User password <span class="muted">(optional)</span></label>
+          <input type="text" id="user_pass" name="user_pass" autocomplete="off">
+        </div>
+      </div>
+
+      <label for="note">Note for recipient</label>
+      <textarea id="note" name="note" rows="2" placeholder="e.g. VMM-042 for Acme Corp"></textarea>
+
+      <div class="field-row">
+        <div>
+          <label for="ttl_hours">Expires after (hours)</label>
+          <input type="number" id="ttl_hours" name="ttl_hours" value="168" min="1" max="720">
+        </div>
+        <div>
+          <label for="max_views">Max views</label>
+          <input type="number" id="max_views" name="max_views" value="1" min="1" max="10">
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">Generate link</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Active links <span class="muted">({{ secrets|length }})</span></h2>
+    {% if not secrets %}
+      <p class="muted">No active links right now.</p>
+    {% else %}
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Root user</th>
+            <th>Note</th>
+            <th>Created by</th>
+            <th>Expires</th>
+            <th>Views</th>
+            <th>Link</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in secrets %}
+          <tr>
+            <td>{{ s.root_user }}</td>
+            <td class="truncate" title="{{ s.note }}">{{ s.note or "—" }}</td>
+            <td>{{ s.created_by or "—" }}</td>
+            <td>{{ s.expires_at.split(".")[0].replace("T", " ") }} UTC</td>
+            <td>{{ s.view_count }}/{{ s.max_views }}</td>
+            <td>
+              <input class="link-field" type="text" readonly value="{{ s.share_url }}" onclick="this.select()">
+            </td>
+            <td>
+              <form method="post" action="{{ url_for('revoke_secret', token=s.token) }}" class="inline-form"
+                    onsubmit="return confirm('Permanently delete this link and its credentials? This cannot be undone.');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-danger btn-sm">Revoke</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

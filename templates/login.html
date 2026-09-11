@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Log in · Secret Share{% endblock %}
+{% block content %}
+<div class="center-card">
+  <div class="card auth-card">
+    <div class="brand-lockup">
+      <span class="brand-icon">🔒</span>
+      <h1>Secret Share</h1>
+    </div>
+    <p class="muted">Sign in to create and manage credential links.</p>
+    <form method="post" action="{{ url_for('login') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" autocomplete="username" required autofocus>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" required>
+
+      <button type="submit" class="btn btn-primary btn-block">Log in</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
