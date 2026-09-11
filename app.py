@@ -282,6 +282,7 @@ def create_secret():
     user_user = sanitize_input(request.form.get("user_user", ""), 100)
     user_pass = sanitize_input(request.form.get("user_pass", ""), 200)
     note = sanitize_input(request.form.get("note", ""), 1000)
+    created_by = sanitize_input(request.form.get("created_by", ""), 200) or session.get("username", "")
 
     ttl_hours = request.form.get("ttl_hours", config.DEFAULT_TTL_HOURS, type=int) or config.DEFAULT_TTL_HOURS
     max_views = request.form.get("max_views", 1, type=int) or 1
@@ -302,7 +303,7 @@ def create_secret():
            (token, root_user, root_pass_enc, user_user, user_pass_enc, note, created_by, expires_at, max_views)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (token, root_user, encrypt_password(root_pass), user_user, encrypt_password(user_pass),
-         note, session.get("username"), expires_at.isoformat(), max_views),
+         note, created_by, expires_at.isoformat(), max_views),
     )
     db.commit()
 
