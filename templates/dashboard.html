@@ -12,9 +12,18 @@
     </div>
   </div>
 
-  <div class="grid">
-    <section class="card form-card">
-      <h2>New credential link</h2>
+  <div class="tabs-bar">
+    <button type="button" class="tab-btn active" data-tab="generate">
+      <span class="tab-icon">🔐</span> Generate Link
+    </button>
+    <button type="button" class="tab-btn" data-tab="active">
+      <span class="tab-icon">📋</span> Active Links <span class="tab-count">{{ secrets|length }}</span>
+    </button>
+  </div>
+
+  <!-- Tab: Generate -->
+  <div class="tab-panel active" id="tab-generate">
+    <div class="card form-card">
       <form method="post" action="{{ url_for('create_secret') }}" id="create-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
@@ -82,14 +91,18 @@
 
         <button type="submit" class="btn btn-primary btn-block btn-generate">Generate Secure Link</button>
       </form>
+    </div>
+  </div>
 
-      <p class="form-footer">Passwords are encrypted at rest. Links expire automatically.</p>
-    </section>
-
-    <section class="card">
-      <h2>Active links <span class="muted">({{ secrets|length }})</span></h2>
+  <!-- Tab: Active Links -->
+  <div class="tab-panel" id="tab-active">
+    <div class="card">
       {% if not secrets %}
-        <p class="muted">No active links right now.</p>
+        <div class="empty-state">
+          <p class="empty-icon">📭</p>
+          <p class="empty-title">No active links</p>
+          <p class="muted">Links you create will appear here.</p>
+        </div>
       {% else %}
       <div class="secret-list">
         {% for s in secrets %}
@@ -110,6 +123,7 @@
           </div>
           <div class="secret-buttons">
             <input class="link-field" type="text" readonly value="{{ s.share_url }}">
+            <button type="button" class="btn btn-ghost btn-sm" data-copy="{{ s.share_url }}">Copy</button>
             <form method="post" action="{{ url_for('revoke_secret', token=s.token) }}" class="inline-form" data-confirm="Permanently delete this link and its credentials? This cannot be undone.">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" class="btn btn-danger btn-sm">Revoke</button>
@@ -119,7 +133,7 @@
         {% endfor %}
       </div>
       {% endif %}
-    </section>
+    </div>
   </div>
 </div>
 
@@ -164,4 +178,17 @@
 {% endblock %}
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/generator.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.tab-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+      document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+      btn.classList.add('active');
+      var panel = document.getElementById('tab-' + btn.getAttribute('data-tab'));
+      if (panel) panel.classList.add('active');
+    });
+  });
+});
+</script>
 {% endblock %}
