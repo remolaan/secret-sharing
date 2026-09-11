@@ -1,16 +1,22 @@
 {% extends "base.html" %}
 {% block title %}Link created · Secret Share{% endblock %}
 {% block content %}
-<div class="center-card">
+<div class="center-card center-card-wide">
   <div class="card">
-    <h1 class="success-title">✓ Link created</h1>
+    <div class="brand-lockup">
+      <span class="brand-icon">✅</span>
+      <h1 class="success-title">Link created</h1>
+    </div>
     <p class="muted">Share this link with the recipient. It will not be shown here again after you leave this page — it's also on your dashboard.</p>
-    <input class="link-field link-field-big" type="text" readonly value="{{ share_url }}" onclick="this.select()">
+    <div class="copy-row">
+      <input id="share-url" class="link-field link-field-big" type="text" readonly value="{{ share_url }}">
+      <button type="button" class="btn btn-primary" data-copy="#share-url">Copy</button>
+    </div>
     <ul class="meta-list">
       <li>Expires: {{ expires_at.strftime("%Y-%m-%d %H:%M") }} UTC</li>
       <li>Max views: {{ max_views }}</li>
     </ul>
-    <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-block">Back to dashboard</a>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-ghost btn-block">Back to dashboard</a>
   </div>
 </div>
 {% endblock %}

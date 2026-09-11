@@ -1,57 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Credential · Secret Share</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-  <div class="wrap">
-    <main>
-      <div class="center-card">
-        <div class="card">
-          <h1>Credential</h1>
-          {% if secret.note %}
-          <p class="note-box">{{ secret.note }}</p>
-          {% endif %}
+{% extends "base.html" %}
+{% block title %}Credential · Secret Share{% endblock %}
+{% block content %}
+<div class="center-card center-card-wide">
+  <div class="card">
+    <div class="brand-lockup">
+      <span class="brand-icon">🔑</span>
+      <h1>Credential</h1>
+    </div>
+    {% if secret.note %}
+    <p class="note-box">{{ secret.note }}</p>
+    {% endif %}
 
-          <div class="cred-block">
-            <h3>Root</h3>
-            <div class="cred-row">
-              <span class="cred-label">Username</span>
-              <code class="cred-value">{{ secret.root_user }}</code>
-            </div>
-            <div class="cred-row">
-              <span class="cred-label">Password</span>
-              <code class="cred-value">{{ secret.root_pass }}</code>
-            </div>
-          </div>
-
-          {% if secret.user_user or secret.user_pass %}
-          <div class="cred-block">
-            <h3>User</h3>
-            <div class="cred-row">
-              <span class="cred-label">Username</span>
-              <code class="cred-value">{{ secret.user_user }}</code>
-            </div>
-            <div class="cred-row">
-              <span class="cred-label">Password</span>
-              <code class="cred-value">{{ secret.user_pass }}</code>
-            </div>
-          </div>
-          {% endif %}
-
-          <div class="warning-box">
-            {% if secret.view_count >= secret.max_views %}
-              This was the last permitted view. This link is now permanently deleted.
-            {% else %}
-              Views used: {{ secret.view_count }} of {{ secret.max_views }}. Save this now — treat it as gone once you close this page.
-            {% endif %}
-          </div>
-        </div>
+    <div class="cred-block">
+      <h3>Root</h3>
+      <div class="cred-row">
+        <span class="cred-label">Username</span>
+        <code class="cred-value" id="root-user">{{ secret.root_user }}</code>
+        <button type="button" class="btn btn-ghost btn-sm" data-copy="#root-user">Copy</button>
       </div>
-    </main>
+      <div class="cred-row">
+        <span class="cred-label">Password</span>
+        <code class="cred-value" id="root-pass">{{ secret.root_pass }}</code>
+        <button type="button" class="btn btn-ghost btn-sm" data-copy="#root-pass">Copy</button>
+      </div>
+    </div>
+
+    {% if secret.user_user or secret.user_pass %}
+    <div class="cred-block">
+      <h3>User</h3>
+      <div class="cred-row">
+        <span class="cred-label">Username</span>
+        <code class="cred-value" id="user-user">{{ secret.user_user }}</code>
+        <button type="button" class="btn btn-ghost btn-sm" data-copy="#user-user">Copy</button>
+      </div>
+      <div class="cred-row">
+        <span class="cred-label">Password</span>
+        <code class="cred-value" id="user-pass">{{ secret.user_pass }}</code>
+        <button type="button" class="btn btn-ghost btn-sm" data-copy="#user-pass">Copy</button>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="warning-box">
+      {% if secret.view_count >= secret.max_views %}
+        This was the last permitted view. This link is now permanently deleted.
+      {% else %}
+        Views used: {{ secret.view_count }} of {{ secret.max_views }}. Save this now — treat it as gone once you close this page.
+      {% endif %}
+    </div>
   </div>
-</body>
-</html>
+</div>
+{% endblock %}

@@ -1,13 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Dashboard · Secret Share{% endblock %}
 {% block content %}
-
-<div class="bg-animation">
-  <div class="bg-orb bg-orb-1"></div>
-  <div class="bg-orb bg-orb-2"></div>
-  <div class="bg-orb bg-orb-3"></div>
-</div>
-
 <div class="dash-wrap">
   <div class="dash-header">
     <h1>Secure Credential Share</h1>
@@ -168,6 +161,7 @@
   </div>
 </div>
 
+{% endblock %}
+{% block scripts %}
 <script src="{{ url_for('static', filename='js/generator.js') }}"></script>
-<script src="{{ url_for('static', filename='js/reveal.js') }}"></script>
 {% endblock %}
