@@ -94,6 +94,7 @@ start() {
 stop() {
     if [ ! -f "$PID_FILE" ]; then
         echo "Not running"
+        close_firewall
         return 0
     fi
 
@@ -111,6 +112,8 @@ stop() {
         echo "Not running (stale PID file)"
         rm -f "$PID_FILE"
     fi
+
+    close_firewall
 }
 
 status() {
