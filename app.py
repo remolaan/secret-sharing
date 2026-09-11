@@ -150,6 +150,25 @@ def init_db():
             view_count INTEGER DEFAULT 0
         )
     """)
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS secret_views (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            secret_token TEXT NOT NULL,
+            ip_address TEXT,
+            user_agent TEXT,
+            viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS audit_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            action TEXT NOT NULL,
+            staff_user TEXT,
+            secret_token TEXT,
+            details TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
     db.commit()
 
     row = db.execute("SELECT COUNT(*) AS c FROM users").fetchone()
@@ -181,6 +200,26 @@ def purge_expired():
 # ---------------------------------------------------------------------------
 # Crypto / sanitization helpers
 # ---------------------------------------------------------------------------
+
+def log_audit(action, staff_user=None, secret_token=None, details=None):
+    """Write one row to the audit_log table."""
+    db = get_db()
+    db.execute(
+        "INSERT INTO audit_log (action, staff_user, secret_token, details) VALUES (?, ?, ?, ?)",
+        (action, staff_user, secret_token, details),
+    )
+    db.commit()
+
+
+def log_view(secret_token, ip_address, user_agent):
+    """Record a single credential view."""
+    db = get_db()
+    db.execute(
+        "INSERT INTO secret_views (secret_token, ip_address, user_agent) VALUES (?, ?, ?)",
+        (secret_token, ip_address, user_agent),
+    )
+    db.commit()
+
 
 def encrypt_password(plain):
     if not plain:
@@ -269,7 +308,25 @@ def dashboard():
         d = dict(r)
         d["share_url"] = request.host_url.rstrip("/") + "/s/" + d["token"]
         secrets_list.append(d)
-    return render_template("dashboard.html", secrets=secrets_list, username=session.get("username"))
+
+    # View history per secret (only for active secrets)
+    view_history = {}
+    for s in secrets_list:
+        views = db.execute(
+            "SELECT ip_address, user_agent, viewed_at FROM secret_views WHERE secret_token = ? ORDER BY viewed_at DESC",
+            (s["token"],),
+        ).fetchall()
+        view_history[s["token"]] = [dict(v) for v in views]
+
+    # Audit log (last 100 entries)
+    audit_rows = db.execute(
+        "SELECT action, staff_user, secret_token, details, created_at FROM audit_log ORDER BY created_at DESC LIMIT 100"
+    ).fetchall()
+    audit_log = [dict(r) for r in audit_rows]
+
+    return render_template("dashboard.html", secrets=secrets_list,
+                           view_history=view_history, audit_log=audit_log,
+                           username=session.get("username"))
 
 
 @app.route("/create", methods=["POST"])
@@ -307,6 +364,9 @@ def create_secret():
     )
     db.commit()
 
+    log_audit("link_created", staff_user=session.get("username"), secret_token=token,
+              details=f"created_by={created_by} root_user={root_user} max_views={max_views} ttl={ttl_hours}h")
+
     share_url = request.host_url.rstrip("/") + "/s/" + token
     return render_template("created.html", share_url=share_url, expires_at=expires_at, max_views=max_views)
 
@@ -319,6 +379,7 @@ def revoke_secret(token):
     db = get_db()
     db.execute("DELETE FROM secrets WHERE token = ?", (token,))
     db.commit()
+    log_audit("link_revoked", staff_user=session.get("username"), secret_token=token)
     flash("Link revoked and permanently deleted.", "success")
     return redirect(url_for("dashboard"))
 
@@ -413,6 +474,9 @@ def reveal_secret(token):
     db.commit()
 
     logging.info("Secret viewed: token=%s... ip=%s view=%s/%s", token[:8], client_ip, view_count, max_views)
+
+    log_view(token, client_ip, request.headers.get("User-Agent", ""))
+    log_audit("link_viewed", secret_token=token, details=f"ip={client_ip} view={view_count}/{max_views}")
 
     resp = make_response(render_template("reveal.html", secret=secret))
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"

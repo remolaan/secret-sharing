@@ -19,6 +19,12 @@
     <button type="button" class="tab-btn" data-tab="active">
       <span class="tab-icon">📋</span> Active Links <span class="tab-count">{{ secrets|length }}</span>
     </button>
+    <button type="button" class="tab-btn" data-tab="views">
+      <span class="tab-icon">👁️</span> View History
+    </button>
+    <button type="button" class="tab-btn" data-tab="audit">
+      <span class="tab-icon">📜</span> Activity Log
+    </button>
   </div>
 
   <!-- Tab: Generate -->
@@ -128,6 +134,94 @@
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" class="btn btn-danger btn-sm">Revoke</button>
             </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Tab: View History -->
+  <div class="tab-panel" id="tab-views">
+    <div class="card">
+      {% set has_views = false %}
+      {% for s in secrets %}
+        {% if view_history.get(s.token) %}
+          {% set has_views = true %}
+        {% endif %}
+      {% endfor %}
+
+      {% if not secrets %}
+        <div class="empty-state">
+          <p class="empty-icon">👁️</p>
+          <p class="empty-title">No view history yet</p>
+          <p class="muted">Views will be recorded when recipients open credential links.</p>
+        </div>
+      {% else %}
+      <div class="secret-list">
+        {% for s in secrets %}
+        {% set views = view_history.get(s.token, []) %}
+        <div class="secret-item">
+          <div class="secret-info">
+            <div class="secret-meta">
+              <span class="secret-user">{{ s.root_user }}</span>
+              {% if s.user_user %}<span class="secret-sep">&middot;</span><span class="secret-user">{{ s.user_user }}</span>{% endif %}
+              <span class="secret-sep">&middot;</span>
+              <span class="muted">{{ s.view_count }}/{{ s.max_views }} views</span>
+            </div>
+            {% if views %}
+            <div class="view-history">
+              {% for v in views %}
+              <div class="view-entry">
+                <span class="view-ip">{{ v.ip_address or "unknown" }}</span>
+                <span class="view-time">{{ v.viewed_at }}</span>
+                {% if v.user_agent %}
+                <span class="view-agent" title="{{ v.user_agent }}">{{ v.user_agent[:60] }}{% if v.user_agent|length > 60 %}...{% endif %}</span>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <div class="muted" style="margin-top: 6px;">No views recorded yet.</div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Tab: Activity Log -->
+  <div class="tab-panel" id="tab-audit">
+    <div class="card">
+      {% if not audit_log %}
+        <div class="empty-state">
+          <p class="empty-icon">📜</p>
+          <p class="empty-title">No activity yet</p>
+          <p class="muted">Actions like creating, viewing, and revoking links will appear here.</p>
+        </div>
+      {% else %}
+      <div class="audit-list">
+        {% for entry in audit_log %}
+        <div class="audit-entry">
+          <div class="audit-action">
+            {% if entry.action == "link_created" %}
+              <span class="audit-badge audit-created">created</span>
+            {% elif entry.action == "link_viewed" %}
+              <span class="audit-badge audit-viewed">viewed</span>
+            {% elif entry.action == "link_revoked" %}
+              <span class="audit-badge audit-revoked">revoked</span>
+            {% else %}
+              <span class="audit-badge">{{ entry.action }}</span>
+            {% endif %}
+            <span class="audit-token">{{ entry.secret_token[:12] }}{% if entry.secret_token|length > 12 %}...{% endif %}</span>
+          </div>
+          <div class="audit-details">
+            {% if entry.staff_user %}<span class="audit-user">{{ entry.staff_user }}</span>{% endif %}
+            {% if entry.details %}<span class="audit-extra">{{ entry.details }}</span>{% endif %}
+            <span class="audit-time">{{ entry.created_at }}</span>
           </div>
         </div>
         {% endfor %}
