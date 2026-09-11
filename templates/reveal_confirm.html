@@ -51,10 +51,6 @@
     </main>
   </div>
 
-  <script>
-    const box = document.getElementById('accept-box');
-    const btn = document.getElementById('reveal-btn');
-    box.addEventListener('change', () => { btn.disabled = !box.checked; });
-  </script>
+  <script src="{{ url_for('static', filename='js/reveal.js') }}"></script>
 </body>
 </html>
